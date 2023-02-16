@@ -3,11 +3,15 @@ package ma.usmba.bloquante;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MultiThreadServer extends Thread {
+public class TchatServer extends Thread {
+    private List<Conversation> conversations=new ArrayList<>();
+
     int clientsCount;
     public static void main(String[] args) {
-        new MultiThreadServer().start();
+        new TchatServer().start();
     }
 
     @Override
@@ -18,11 +22,26 @@ public class MultiThreadServer extends Thread {
             while (true){
                 Socket socket = serverSocket.accept();
                 ++clientsCount;
-                new Conversation(socket, clientsCount).start();
+                Conversation conversation = new Conversation(socket, clientsCount);
+                conversations.add(conversation);
+                conversation.start();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+     }
+
+     public void broadcastMessage(String message){
+         try {
+             for (Conversation conversation:conversations){
+                 Socket socket=conversation.socket;
+                 OutputStream outputStream=socket.getOutputStream();
+                 PrintWriter printWriter=new PrintWriter(outputStream,true);
+                 printWriter.println(message);
+             }
+         } catch (IOException e) {
+             throw new RuntimeException(e);
+         }
      }
 
     class Conversation extends Thread {
@@ -46,8 +65,7 @@ public class MultiThreadServer extends Thread {
                 String request;
                 while ((request=bufferedReader.readLine())!=null){
                     System.out.println("New Request IP :"+ip+" Request= "+request);
-                    String response="Size = "+request.length();
-                    printWriter.println(response);
+                    broadcastMessage(request);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
