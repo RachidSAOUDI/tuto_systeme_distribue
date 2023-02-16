@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MultiThreadTchatServer extends Thread {
     private List<Conversation> conversations=new ArrayList<>();
@@ -31,10 +32,10 @@ public class MultiThreadTchatServer extends Thread {
         }
      }
 
-     public void broadcastMessage(String message, Conversation convFrom){
+     public void broadcastMessage(String message, Conversation convFrom, List<Integer> clients){
          try {
              for (Conversation conversation:conversations){
-                 if (conversation!=convFrom){
+                 if (conversation!=convFrom && clients.contains(conversation.clientId)){
                      Socket socket=conversation.socket;
                      OutputStream outputStream=socket.getOutputStream();
                      PrintWriter printWriter=new PrintWriter(outputStream,true);
@@ -67,7 +68,25 @@ public class MultiThreadTchatServer extends Thread {
                 String request;
                 while ((request=bufferedReader.readLine())!=null){
                     System.out.println("New Request IP :"+ip+" Request= "+request);
-                    broadcastMessage(request,this);
+                    List<Integer> clientsTo = new ArrayList<>();
+                    String message;
+                    if (request.contains("=>")){
+                        String[] items = request.split("=>");
+                        String clients = items[0];
+                        message = items[1];
+                        if (clients.contains(",")){
+                            String[] clientsIds = clients.split(",");
+                            for (String id:clientsIds){
+                                clientsTo.add(Integer.parseInt(id));
+                            }
+                        } else {
+                            clientsTo.add(Integer.parseInt(clients));
+                        }
+                    } else {
+                        clientsTo=conversations.stream().map(conversation -> conversation.clientId).collect(Collectors.toList());
+                        message=request;
+                    }
+                    broadcastMessage(message,this,clientsTo);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
