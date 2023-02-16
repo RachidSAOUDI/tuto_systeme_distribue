@@ -6,12 +6,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TchatServer extends Thread {
+public class MultiThreadTchatServer extends Thread {
     private List<Conversation> conversations=new ArrayList<>();
 
     int clientsCount;
     public static void main(String[] args) {
-        new TchatServer().start();
+        new MultiThreadTchatServer().start();
     }
 
     @Override
@@ -31,13 +31,15 @@ public class TchatServer extends Thread {
         }
      }
 
-     public void broadcastMessage(String message){
+     public void broadcastMessage(String message, Conversation convFrom){
          try {
              for (Conversation conversation:conversations){
-                 Socket socket=conversation.socket;
-                 OutputStream outputStream=socket.getOutputStream();
-                 PrintWriter printWriter=new PrintWriter(outputStream,true);
-                 printWriter.println(message);
+                 if (conversation!=convFrom){
+                     Socket socket=conversation.socket;
+                     OutputStream outputStream=socket.getOutputStream();
+                     PrintWriter printWriter=new PrintWriter(outputStream,true);
+                     printWriter.println(message);
+                 }
              }
          } catch (IOException e) {
              throw new RuntimeException(e);
@@ -65,7 +67,7 @@ public class TchatServer extends Thread {
                 String request;
                 while ((request=bufferedReader.readLine())!=null){
                     System.out.println("New Request IP :"+ip+" Request= "+request);
-                    broadcastMessage(request);
+                    broadcastMessage(request,this);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
