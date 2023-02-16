@@ -23,17 +23,15 @@ public class MultiThreadServer extends Thread {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
+     }
 
     class Conversation extends Thread {
         private Socket socket;
         public int clientId;
-
         public Conversation(Socket socket, int clientId){
             this.socket = socket;
             this.clientId = clientId;
         }
-
         @Override
         public void run() {
             try {
@@ -45,8 +43,10 @@ public class MultiThreadServer extends Thread {
                 String ip = socket.getRemoteSocketAddress().toString();
                 System.out.println("New Client Connection => "+clientId+" IP :"+ip);
                 printWriter.println("Welcome Client ID : "+clientId);
-                while (true){
-                    String request=bufferedReader.readLine();
+                String request;
+                while ((request=bufferedReader.readLine())!=null){
+//                while (true){
+//                    String request=bufferedReader.readLine();
                     System.out.println("New Request IP :"+ip+" Request= "+request);
                     String response="Size = "+request.length();
                     printWriter.println(response);

@@ -14,13 +14,13 @@ public class MyTelnetClient {
             OutputStream outputStream=socket.getOutputStream();
             PrintWriter printWriter=new PrintWriter(outputStream,true);
             new Thread(()->{
-                while (true){
-                    try {
-                        String response=bufferedReader.readLine();
-                        System.out.println(response);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                try {
+                String request;
+                while ((request=bufferedReader.readLine())!=null){
+                        System.out.println(request);
+                }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }).start();
             Scanner scanner=new Scanner(System.in);
@@ -28,7 +28,7 @@ public class MyTelnetClient {
                 String request = scanner.nextLine();
                 printWriter.println(request);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
